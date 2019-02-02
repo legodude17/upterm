@@ -5,12 +5,14 @@ import {JSONTree} from "../utils/JSONTree";
 
 PluginManager.registerPrettyfier({
     prettify: (job: Job): React.ReactElement<any> => {
-        return <JSONTree data={JSON.parse(job.output.toString())}/>;
+        const output = job.output.toString().replace(/\n/g, '');
+        return <JSONTree data={JSON.parse(output)}/>;
     },
 
     isApplicable: (job: Job): boolean => {
+        const output = job.output.toString().replace(/\n/g, '');
         try {
-            const parseResult = JSON.parse(job.output.toString());
+            const parseResult = JSON.parse(output);
             return parseResult && typeof parseResult === "object";
         } catch (exception) {
             return false;
