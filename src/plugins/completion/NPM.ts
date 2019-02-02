@@ -102,9 +102,7 @@ const npmCommandConfig = [
             if (arg.value === '') {
                 return [];
             }
-            console.log(arg.value);
             const packages = await getPackages(arg.value);
-            console.log(packages);
             return packages.map(v => ({
                 label: v.name,
                 detail: v.description
