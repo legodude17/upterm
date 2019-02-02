@@ -1,8 +1,22 @@
 import * as Path from "path";
 import {commandWithSubcommands} from "../completion_utils/Common";
-import {io, mapObject} from "../../utils/Common";
+import {io, mapObject, homeDirectory} from "../../utils/Common";
 import {PluginManager} from "../../PluginManager";
 import {AutocompletionContext} from "../../Interfaces";
+import { memoize } from "lodash";
+import { defaults } from 'make-fetch-happen';
+
+const fetch = defaults({
+    cacheManager: Path.join(homeDirectory, '.upterm', 'cache')
+});
+
+const getPackages = memoize(async(pkgName: string) => {
+    const url = 'https://registry.npmjs.org/-/v1/search?text=' + pkgName;
+    console.log(url);
+    const res = await fetch(url);
+    const json = await res.json();
+    return json.objects.map(v => v.package);
+})
 
 const npmCommandConfig = [
     {
@@ -80,10 +94,26 @@ const npmCommandConfig = [
     {
         name: "install",
         detail: "Install a package",
+        provider: async (context: AutocompletionContext) => {
+            const arg = context.argument.command.nthArgument(2);
+            if (arg == null) {
+                return [];
+            }
+            if (arg.value === '') {
+                return [];
+            }
+            console.log(arg.value);
+            const packages = await getPackages(arg.value);
+            console.log(packages);
+            return packages.map(v => ({
+                label: v.name,
+                detail: v.description
+            }));
+        },
     },
     {
         name: "install-test",
-        detail: "",
+        detail: "Run `npm install` followed by `npm test`",
     },
     {
         name: "link",
@@ -179,7 +209,7 @@ const npmCommandConfig = [
     },
     {
         name: "start",
-        detail: "Start a package",
+        detail: "Start a package (runs the start script)",
     },
     {
         name: "stop",
